@@ -1,4 +1,4 @@
-#include "frame_processor.h"
+ #include "frame_processor.h"
 
 Mat game_region(Mat frame) {
     Size size = frame.size();
@@ -33,8 +33,7 @@ TagSet StockCount::process(Mat frame) {
     // imshow("template match", result);
     // waitKey(0);
 
-    unordered_map<string, int> tags;
+    TagSet tags;
     tags["p1_stocks"] = num_stocks;
-    cout << "p1_stocks=" << num_stocks << endl;
     return tags;
 }

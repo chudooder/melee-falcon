@@ -1,8 +1,10 @@
 #include <iostream>
 #include <string>
 #include <opencv2/opencv.hpp>
+#include <vector>
 
 #include "frame_processor.h"
+#include "postprocess.h"
 
 using namespace cv;
 using namespace std;
@@ -30,9 +32,10 @@ string type2str(int type) {
  	return r;
 }
 
-void process(Mat frame) {
+TagSet process(Mat frame) {
 	StockCount sc;
-	sc.process(frame);
+	TagSet t = sc.process(frame);
+	return t;
 }
 
 int main(int argc, char** argv) {
@@ -55,6 +58,7 @@ int main(int argc, char** argv) {
 	}
 
 	int frameCount;
+	vector<TagSet> tags;
 	while (true) {
 		if(frameCount % (30 * 60) == 0) {
 			cout << frameCount / (30 * 60) << ":00" << endl;
@@ -66,11 +70,18 @@ int main(int argc, char** argv) {
 
 		frameCount++;
 		if(frameCount >= 600 && frameCount <= 1900) {
-			process(frame);
+			tags.push_back(process(frame));
 		} else if(frameCount == 1901) {
 			break;
 		}
 	}
+
+	sliding_mode(tags, "p1_stocks", 11);
+
+	for(auto& tag : tags) {
+    	cout << "p1_stocks=" << tag["p1_stocks"] << endl;
+	}
+
 	cout << frameCount << " frames grabbed." << endl;
 
 	return 0;
