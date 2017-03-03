@@ -2,6 +2,7 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 #include <vector>
+#include <chrono>
 
 #include "frame_processor.h"
 #include "postprocess.h"
@@ -32,15 +33,14 @@ string type2str(int type) {
  	return r;
 }
 
+StockCountProcessor sc;
+
 TagSet process(Mat frame) {
-	StockCount sc;
 	TagSet t = sc.process(frame);
 	return t;
 }
 
 int main(int argc, char** argv) {
-
-	// cvtColor(fox_neutral, fox_neutral, COLOR_RGB2GRAY);
 
 	if (argc <= 1) {
 		cout << "Path to file required." << endl;
@@ -57,32 +57,38 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	int frameCount;
+	int frame_count = 0;
+	int processed_frames = 0;
 	vector<TagSet> tags;
+	chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 	while (true) {
-		if(frameCount % (30 * 60) == 0) {
-			cout << frameCount / (30 * 60) << ":00" << endl;
+		if(frame_count % (30 * 60) == 0) {
+			cout << frame_count / (30 * 60) << ":00" << endl;
 		}
 		cap.read(frame);
 		if(frame.empty()) {
 			break;
 		}
 
-		frameCount++;
-		if(frameCount >= 600 && frameCount <= 1900) {
+		frame_count++;
+		if(frame_count >= 6*30 && frame_count <= 176*30) {
+			processed_frames++;
 			tags.push_back(process(frame));
-		} else if(frameCount == 1901) {
+		} else if(frame_count > 176*30) {
 			break;
 		}
 	}
 
-	sliding_mode(tags, "p1_stocks", 11);
+	sliding_mode(tags, "p1_stocks", 30);
+	sliding_mode(tags, "p2_stocks", 30);
 
 	for(auto& tag : tags) {
-    	cout << "p1_stocks=" << tag["p1_stocks"] << endl;
+		cout << "p1_stocks=" << tag["p1_stocks"] << ", p2_stocks=" << tag["p2_stocks"] << endl;
 	}
+	chrono::steady_clock::time_point end = chrono::steady_clock::now();
 
-	cout << frameCount << " frames grabbed." << endl;
+	auto millis = chrono::duration_cast<chrono::milliseconds> (end - begin).count();
+	cout << processed_frames / (millis / (1000.0 / 30.0)) << " frames per frame" <<std::endl;
 
 	return 0;
 }

@@ -1,9 +1,9 @@
 #ifndef FRAME_PROCESSOR_H_
 #define FRAME_PROCESSOR_H_
 
-#include <string>
 #include <unordered_map>
 #include <opencv2/opencv.hpp>
+#include <utility>
 
 using namespace std;
 using namespace cv;
@@ -15,10 +15,14 @@ public:
     virtual TagSet process(Mat frame) = 0;
 };
 
-class StockCount : Processor {
-    Mat fox_neutral = imread("img/stock_icons/fox_neutral.png", CV_LOAD_IMAGE_COLOR);
+class StockCountProcessor : Processor {
+    unordered_map<string, pair<Mat, Mat>> stock_icons;
+    unordered_map<int, string> characters;
 public:
-    TagSet process(Mat frame);
+    StockCountProcessor();
+    virtual TagSet process(Mat frame);
+private:
+    string guess_character(Mat icon_region);
 };
 
 #endif
